@@ -20,9 +20,10 @@ input,select,textarea{font-family:inherit;}
 :focus-visible{outline:2px solid var(--red);outline-offset:2px;}
 
 /* ---------- LOGIN ---------- */
-#login{position:fixed;inset:0;background:var(--soft);display:flex;align-items:center;justify-content:center;padding:24px;z-index:300;}
+#login{position:fixed;inset:0;background:var(--red);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;z-index:300;overflow-y:auto;}
 #login.hidden{display:none;}
-.login-card{background:var(--white);border-radius:20px;padding:38px 34px;max-width:400px;width:100%;box-shadow:0 4px 32px rgba(0,0,0,.08);}
+.login-logo{width:168px;margin-bottom:26px;filter:brightness(0) invert(1);flex-shrink:0;}
+.login-card{background:var(--white);border-radius:20px;padding:38px 34px;max-width:400px;width:100%;box-shadow:0 18px 54px rgba(0,0,0,.22);flex-shrink:0;}
 .login-badge{display:inline-flex;align-items:center;gap:7px;background:var(--red);color:#fff;font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:5px 11px;border-radius:99px;margin-bottom:18px;}
 .login-card h1{font-size:23px;font-weight:800;margin-bottom:6px;}
 .login-card>p{font-size:14px;color:var(--muted);margin-bottom:26px;line-height:1.6;}
@@ -47,6 +48,7 @@ input,select,textarea{font-family:inherit;}
 #app.show{display:flex;}
 .side{width:230px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;flex-shrink:0;}
 .side-head{padding:22px 20px 18px;border-bottom:1px solid var(--border);}
+.side-head img{height:19px;display:block;margin-bottom:13px;}
 .side-head strong{display:block;font-size:15px;font-weight:800;}
 .side-head span{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
 .nav{flex:1;padding:12px 10px;}
@@ -139,6 +141,7 @@ tbody tr:hover{background:var(--soft);}
 
 <!-- ============ LOGIN ============ -->
 <div id="login">
+  <img class="login-logo" src="https://upload.wikimedia.org/wikipedia/sco/thumb/d/d8/Nestl%C3%A9.svg/3840px-Nestl%C3%A9.svg.png" alt="Nestlé">
   <div class="login-card">
     <span class="login-badge"><i class="fa-solid fa-lock"></i> Acceso interno</span>
     <h1>Panel de RR.HH.</h1>
@@ -153,12 +156,6 @@ tbody tr:hover{background:var(--soft);}
     </div>
     <button class="btn btn-primary btn-block" onclick="entrar()">Entrar</button>
     <p class="msg err" id="loginMsg"></p>
-    <div class="field" style="margin-top:22px;">
-      <label for="apiUrl">URL del Apps Script</label>
-      <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec">
-    </div>
-    <button class="btn btn-ghost btn-block btn-sm" onclick="probarConexion()">Guardar y probar conexión</button>
-    <p class="msg" id="conexMsg"></p>
   </div>
 </div>
 
@@ -166,6 +163,7 @@ tbody tr:hover{background:var(--soft);}
 <div id="app">
   <aside class="side">
     <div class="side-head">
+      <img src="https://upload.wikimedia.org/wikipedia/sco/thumb/d/d8/Nestl%C3%A9.svg/3840px-Nestl%C3%A9.svg.png" alt="Nestlé">
       <strong>Bienestar Laboral</strong>
       <span>Nestlé Guatemala</span>
     </div>
@@ -335,23 +333,8 @@ let chartDias = null, chartPreg = null;
 // LOGIN Y CONEXIÓN
 // ============================================
 window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('apiUrl').value = getApiUrl();
   document.getElementById('pw').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
 });
-
-async function probarConexion() {
-  const url = document.getElementById('apiUrl').value.trim();
-  const msg = document.getElementById('conexMsg');
-  if (!url) { aviso(msg, 'err', 'Pegá la URL /exec de tu implementación.'); return; }
-  setApiUrl(url);
-  aviso(msg, '', 'Probando…');
-  try {
-    await apiGet('ping');
-    aviso(msg, 'ok', 'Conectado. Ya podés entrar.');
-  } catch (err) {
-    aviso(msg, 'err', 'No se pudo conectar: ' + err.message);
-  }
-}
 
 async function entrar() {
   const msg = document.getElementById('loginMsg');
