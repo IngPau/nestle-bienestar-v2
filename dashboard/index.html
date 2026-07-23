@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nestlé Bienestar — Panel de RR.HH.</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;600;700;800&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --red:#D72B2B;--dark:#111;--mid:#444;--muted:#888;--soft:#F5F3EF;
+  --white:#FFF;--border:#E4E1DB;--green:#2A9B5B;--amber:#E07B0D;
+  --radius:12px;--tr:.25s ease;
+}
+html,body{height:100%;font-family:'Noto Sans',sans-serif;background:var(--soft);color:var(--dark);}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px;}
+
+/* ---------- LOGIN ---------- */
+#login{position:fixed;inset:0;background:var(--soft);display:flex;align-items:center;justify-content:center;padding:24px;z-index:300;}
+#login.hidden{display:none;}
+.login-card{background:var(--white);border-radius:20px;padding:38px 34px;max-width:400px;width:100%;box-shadow:0 4px 32px rgba(0,0,0,.08);}
+.login-badge{display:inline-flex;align-items:center;gap:7px;background:var(--red);color:#fff;font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:5px 11px;border-radius:99px;margin-bottom:18px;}
+.login-card h1{font-size:23px;font-weight:800;margin-bottom:6px;}
+.login-card>p{font-size:14px;color:var(--muted);margin-bottom:26px;line-height:1.6;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--mid);margin-bottom:5px;}
+.field input,.field select,.field textarea{width:100%;padding:11px 14px;border:1.5px solid #E0DDD7;border-radius:10px;font-size:14px;outline:none;background:var(--soft);color:var(--dark);transition:border-color var(--tr);}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--red);background:#fff;}
+.btn{padding:11px 18px;border:none;border-radius:10px;font-size:14px;font-weight:700;transition:var(--tr);}
+.btn-primary{background:var(--red);color:#fff;}
+.btn-primary:hover{background:#b82020;}
+.btn-block{width:100%;}
+.btn-ghost{background:transparent;color:var(--mid);border:1.5px solid var(--border);}
+.btn-ghost:hover{border-color:var(--dark);color:var(--dark);}
+.btn-sm{padding:7px 12px;font-size:12px;}
+.msg{font-size:12.5px;margin-top:12px;display:none;line-height:1.5;}
+.msg.show{display:block;}
+.msg.err{color:var(--red);}
+.msg.ok{color:var(--green);}
+
+/* ---------- LAYOUT ---------- */
+#app{display:none;min-height:100vh;}
+#app.show{display:flex;}
+.side{width:230px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;flex-shrink:0;}
+.side-head{padding:22px 20px 18px;border-bottom:1px solid var(--border);}
+.side-head strong{display:block;font-size:15px;font-weight:800;}
+.side-head span{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
+.nav{flex:1;padding:12px 10px;}
+.nav button{display:flex;align-items:center;gap:11px;width:100%;padding:11px 13px;background:none;border:none;border-radius:9px;font-size:14px;font-weight:600;color:var(--mid);text-align:left;transition:var(--tr);}
+.nav button i{width:17px;text-align:center;font-size:14px;}
+.nav button:hover{background:var(--soft);}
+.nav button.on{background:var(--red);color:#fff;}
+.side-foot{padding:14px 16px;border-top:1px solid var(--border);}
+.side-foot small{display:block;font-size:11px;color:var(--muted);margin-bottom:9px;}
+.main{flex:1;padding:26px 30px 60px;min-width:0;}
+.page{display:none;}
+.page.on{display:block;animation:fade .3s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap;}
+.page-head h2{font-size:24px;font-weight:800;}
+.page-head p{font-size:13.5px;color:var(--muted);margin-top:3px;}
+
+/* ---------- TARJETAS ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:22px;}
+.card{background:var(--white);border-radius:var(--radius);padding:19px 20px;border:1px solid var(--border);}
+.card .lbl{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;}
+.card .val{font-size:31px;font-weight:800;line-height:1;}
+.card .sub{font-size:12px;color:var(--muted);margin-top:7px;}
+.card.alert .val{color:var(--red);}
+.panel{background:var(--white);border-radius:var(--radius);padding:22px;border:1px solid var(--border);margin-bottom:18px;}
+.panel h3{font-size:15px;font-weight:800;margin-bottom:4px;}
+.panel .hint{font-size:12.5px;color:var(--muted);margin-bottom:16px;line-height:1.5;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+@media(max-width:900px){.grid2{grid-template-columns:1fr;}}
+
+/* ---------- TABLAS ---------- */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:9px 12px;border-bottom:1.5px solid var(--border);white-space:nowrap;}
+td{padding:11px 12px;border-bottom:1px solid #F0EEE9;vertical-align:middle;}
+tbody tr:hover{background:var(--soft);}
+.badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700;}
+.badge.ok{background:#E6F4EC;color:var(--green);}
+.badge.warn{background:#FDEEDC;color:var(--amber);}
+.badge.bad{background:#FBE7E7;color:var(--red);}
+.badge.off{background:#EFEDE8;color:var(--muted);}
+
+/* ---------- ENCUESTAS ---------- */
+.enc-list{display:grid;gap:14px;}
+.enc-item{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:19px 20px;display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap;}
+.enc-item.live{border-color:var(--green);border-width:1.5px;}
+.enc-item h4{font-size:16px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.enc-item p{font-size:13px;color:var(--muted);margin-bottom:9px;}
+.enc-meta{font-size:12px;color:var(--mid);}
+.enc-acts{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ---------- CONSTRUCTOR ---------- */
+.q-row{background:var(--soft);border:1px solid var(--border);border-radius:11px;padding:15px;margin-bottom:11px;}
+.q-row-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.q-num{width:25px;height:25px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.q-row-top strong{flex:1;font-size:13px;}
+.q-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+@media(max-width:700px){.q-grid{grid-template-columns:1fr;}}
+.q-grid .full{grid-column:1/-1;}
+.chk{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mid);cursor:pointer;}
+.chk input{width:15px;height:15px;accent-color:var(--red);cursor:pointer;}
+.icon-btn{background:none;border:none;color:var(--muted);font-size:14px;padding:5px 7px;border-radius:6px;transition:var(--tr);}
+.icon-btn:hover{background:#EDEAE4;color:var(--red);}
+
+/* ---------- MODAL ---------- */
+.modal{position:fixed;inset:0;background:rgba(17,17,17,.45);display:none;align-items:flex-start;justify-content:center;padding:34px 18px;z-index:200;overflow-y:auto;}
+.modal.show{display:flex;}
+.modal-box{background:var(--white);border-radius:16px;padding:26px;max-width:760px;width:100%;box-shadow:0 12px 50px rgba(0,0,0,.2);}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.modal-head h3{font-size:18px;font-weight:800;}
+.modal-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:18px;border-top:1px solid var(--border);}
+
+.empty{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty i{font-size:32px;margin-bottom:12px;color:var(--border);display:block;}
+.empty p{font-size:14px;}
+.loading{text-align:center;padding:30px;color:var(--muted);font-size:13.5px;}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.filters select,.filters input{padding:8px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;background:var(--white);}
+.chart-box{position:relative;height:250px;}
+@media(max-width:820px){
+  #app.show{flex-direction:column;}
+  .side{width:100%;height:auto;position:static;}
+  .nav{display:flex;overflow-x:auto;padding:8px;}
+  .nav button{white-space:nowrap;}
+  .main{padding:20px 16px 50px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="login">
+  <div class="login-card">
+    <span class="login-badge"><i class="fa-solid fa-lock"></i> Acceso interno</span>
+    <h1>Panel de RR.HH.</h1>
+    <p>Bienestar Laboral — Nestlé Guatemala</p>
+    <div class="field">
+      <label for="us">Usuario</label>
+      <input type="text" id="us" placeholder="admin" autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="pw">Contraseña</label>
+      <input type="password" id="pw" placeholder="••••••" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary btn-block" onclick="entrar()">Entrar</button>
+    <p class="msg err" id="loginMsg"></p>
+    <div class="field" style="margin-top:22px;">
+      <label for="apiUrl">URL del Apps Script</label>
+      <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec">
+    </div>
+    <button class="btn btn-ghost btn-block btn-sm" onclick="probarConexion()">Guardar y probar conexión</button>
+    <p class="msg" id="conexMsg"></p>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <aside class="side">
+    <div class="side-head">
+      <strong>Bienestar Laboral</strong>
+      <span>Nestlé Guatemala</span>
+    </div>
+    <nav class="nav">
+      <button class="on" onclick="irA('resumen',this)"><i class="fa-solid fa-chart-line"></i> Resumen</button>
+      <button onclick="irA('encuestas',this)"><i class="fa-solid fa-clipboard-list"></i> Encuestas</button>
+      <button onclick="irA('respuestas',this)"><i class="fa-solid fa-table-list"></i> Respuestas</button>
+      <button onclick="irA('usuarios',this)"><i class="fa-solid fa-users"></i> Usuarios</button>
+    </nav>
+    <div class="side-foot">
+      <small id="userLabel">admin</small>
+      <button class="btn btn-ghost btn-sm btn-block" onclick="recargar()"><i class="fa-solid fa-rotate"></i> Actualizar datos</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ---------- RESUMEN ---------- -->
+    <section class="page on" id="page-resumen">
+      <div class="page-head">
+        <div>
+          <h2>Resumen</h2>
+          <p id="resumenSub">Cargando…</p>
+        </div>
+      </div>
+
+      <div class="cards" id="statCards"></div>
+
+      <div class="grid2">
+        <div class="panel">
+          <h3>Ánimo promedio por día</h3>
+          <p class="hint">Escala de 1 a 5 según las preguntas de caritas.</p>
+          <div class="chart-box"><canvas id="chartDias"></canvas></div>
+        </div>
+        <div class="panel">
+          <h3>Promedio por pregunta</h3>
+          <p class="hint">Solo preguntas numéricas, normalizadas a 100.</p>
+          <div class="chart-box"><canvas id="chartPreg"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Respuestas que necesitan atención</h3>
+        <p class="hint">Aparecen aquí las preguntas marcadas como críticas cuando alguien responde negativo.</p>
+        <div id="alertas"></div>
+      </div>
+    </section>
+
+    <!-- ---------- ENCUESTAS ---------- -->
+    <section class="page" id="page-encuestas">
+      <div class="page-head">
+        <div>
+          <h2>Encuestas</h2>
+          <p>Creá una encuesta, agregale preguntas y elegí cuál ve la tablet.</p>
+        </div>
+        <button class="btn btn-primary" id="btnNueva" onclick="abrirConstructor()"><i class="fa-solid fa-plus"></i> Nueva encuesta</button>
+      </div>
+      <div class="enc-list" id="encList"></div>
+    </section>
+
+    <!-- ---------- RESPUESTAS ---------- -->
+    <section class="page" id="page-respuestas">
+      <div class="page-head">
+        <div>
+          <h2>Respuestas</h2>
+          <p>Cada fila es una sesión completa de un trabajador.</p>
+        </div>
+        <button class="btn btn-ghost" onclick="exportarCSV()"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button>
+      </div>
+      <div class="panel">
+        <div class="filters">
+          <select id="fEncuesta" onchange="pintarRespuestas()"><option value="">Todas las encuestas</option></select>
+          <select id="fAlerta" onchange="pintarRespuestas()">
+            <option value="">Todas las sesiones</option>
+            <option value="1">Solo con alerta</option>
+          </select>
+          <input type="text" id="fBusca" placeholder="Buscar trabajador…" oninput="pintarRespuestas()">
+        </div>
+        <div class="tbl-wrap"><table id="tblResp"><thead><tr>
+          <th>Fecha y hora</th><th>Trabajador</th><th>Encuesta</th><th>Promedio</th><th>Estado</th><th></th>
+        </tr></thead><tbody></tbody></table></div>
+        <div id="respVacio"></div>
+      </div>
+    </section>
+
+    <!-- ---------- USUARIOS ---------- -->
+    <section class="page" id="page-usuarios">
+      <div class="page-head">
+        <div>
+          <h2>Usuarios</h2>
+          <p>Trabajadores que pueden iniciar sesión en la tablet.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Agregar usuario</h3>
+        <p class="hint">La contraseña por defecto del mockup es 12345.</p>
+        <div class="q-grid">
+          <div class="field"><label for="nuUser">Usuario</label><input type="text" id="nuUser" placeholder="trabajador6"></div>
+          <div class="field"><label for="nuPass">Contraseña</label><input type="text" id="nuPass" value="12345"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="crearUsuario()"><i class="fa-solid fa-plus"></i> Agregar</button>
+        <p class="msg" id="userMsg"></p>
+      </div>
+      <div class="panel">
+        <div class="tbl-wrap"><table id="tblUsers"><thead><tr>
+          <th>Usuario</th><th>Rol</th><th>Estado</th><th></th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ CONSTRUCTOR DE ENCUESTAS ============ -->
+<div class="modal" id="modalEnc">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modalTitulo">Nueva encuesta</h3>
+      <button class="icon-btn" onclick="cerrarConstructor()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="q-grid">
+      <div class="field"><label for="encNombre">Nombre de la encuesta</label><input type="text" id="encNombre" placeholder="Pulso diario"></div>
+      <div class="field"><label for="encDesc">Descripción corta</label><input type="text" id="encDesc" placeholder="Encuesta de ingreso a planta"></div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 12px;">
+      <strong style="font-size:14px;">Preguntas <span id="qCount" style="color:var(--muted);font-weight:600;"></span></strong>
+      <button class="btn btn-ghost btn-sm" id="btnAddQ" onclick="agregarPregunta()"><i class="fa-solid fa-plus"></i> Agregar pregunta</button>
+    </div>
+
+    <div id="qList"></div>
+    <p class="msg err" id="encMsg"></p>
+
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="cerrarConstructor()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEncuesta()">Guardar encuesta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DETALLE DE SESIÓN ============ -->
+<div class="modal" id="modalDet">
+  <div class="modal-box" style="max-width:560px;">
+    <div class="modal-head">
+      <h3>Detalle de la sesión</h3>
+      <button class="icon-btn" onclick="cerrarDetalle()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="detBody"></div>
+  </div>
+</div>
+
+<script src="../shared/config.js"></script>
+<script>
+// ============================================
+// LÍMITES DEL MOCKUP
+// ============================================
+const MAX_ENCUESTAS = 2;
+const MAX_PREGUNTAS = 10;
+
+// Estado en memoria
+let ENCUESTAS = [], RESPUESTAS = [], USUARIOS = [], SESIONES = [];
+let borrador = { id: null, preguntas: [] };
+let chartDias = null, chartPreg = null;
+
+// ============================================
+// LOGIN Y CONEXIÓN
+// ============================================
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('apiUrl').value = getApiUrl();
+  document.getElementById('pw').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
+});
+
+async function probarConexion() {
+  const url = document.getElementById('apiUrl').value.trim();
+  const msg = document.getElementById('conexMsg');
+  if (!url) { aviso(msg, 'err', 'Pegá la URL /exec de tu implementación.'); return; }
+  setApiUrl(url);
+  aviso(msg, '', 'Probando…');
+  try {
+    await apiGet('ping');
+    aviso(msg, 'ok', 'Conectado. Ya podés entrar.');
+  } catch (err) {
+    aviso(msg, 'err', 'No se pudo conectar: ' + err.message);
+  }
+}
+
+async function entrar() {
+  const msg = document.getElementById('loginMsg');
+  const usuario = document.getElementById('us').value.trim();
+  const password = document.getElementById('pw').value.trim();
+  if (!usuario || !password) { aviso(msg, 'err', 'Ingresá usuario y contraseña.'); return; }
+
+  try {
+    const u = await apiPost('login', { usuario, password });
+    if (u.rol !== 'admin') { aviso(msg, 'err', 'Esta cuenta no tiene acceso al panel.'); return; }
+    document.getElementById('userLabel').textContent = u.usuario;
+    document.getElementById('login').classList.add('hidden');
+    document.getElementById('app').classList.add('show');
+    recargar();
+  } catch (err) {
+    aviso(msg, 'err', err.message);
+  }
+}
+
+function aviso(el, clase, texto) {
+  el.className = 'msg show ' + clase;
+  el.textContent = texto;
+}
+
+// ============================================
+// NAVEGACIÓN
+// ============================================
+function irA(pagina, boton) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.getElementById('page-' + pagina).classList.add('on');
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('on'));
+  boton.classList.add('on');
+}
+
+// ============================================
+// CARGA DE DATOS
+// ============================================
+async function recargar() {
+  document.getElementById('resumenSub').textContent = 'Cargando…';
+  try {
+    const [encuestas, respuestas, usuarios] = await Promise.all([
+      apiGet('encuestas'), apiGet('respuestas'), apiGet('usuarios')
+    ]);
+    ENCUESTAS = encuestas;
+    RESPUESTAS = respuestas;
+    USUARIOS = usuarios;
+    SESIONES = agruparSesiones(RESPUESTAS);
+    pintarResumen();
+    pintarEncuestas();
+    llenarFiltroEncuestas();
+    pintarRespuestas();
+    pintarUsuarios();
+  } catch (err) {
+    document.getElementById('resumenSub').textContent = 'Error al cargar: ' + err.message;
+  }
+}
+
+// Convierte las filas sueltas en sesiones (una por trabajador que completó la encuesta)
+function agruparSesiones(filas) {
+  const mapa = {};
+  filas.forEach(f => {
+    const id = f.sesion_id;
+    if (!mapa[id]) {
+      mapa[id] = {
+        sesion_id: id,
+        fecha: new Date(f.timestamp),
+        trabajador: f.numTrabajador,
+        encuesta_id: f.encuesta_id,
+        encuesta_nombre: f.encuesta_nombre,
+        respuestas: []
+      };
+    }
+    mapa[id].respuestas.push(f);
+  });
+  const lista = Object.values(mapa);
+  lista.forEach(s => {
+    s.promedio = promedioAnimo(s.respuestas);
+    s.alertas = s.respuestas.filter(esAlerta);
+  });
+  return lista.sort((a, b) => b.fecha - a.fecha);
+}
+
+// Una respuesta es alerta si la pregunta es crítica y la respuesta es negativa
+function esAlerta(r) {
+  if (!r.critica) return false;
+  if (r.tipo === 'emoji')  return Number(r.valor) <= 2;
+  if (r.tipo === 'scale')  return Number(r.valor) <= 4;
+  if (r.tipo === 'si_no')  return String(r.valor).toLowerCase() === 'no';
+  return false;
+}
+
+// Promedio de ánimo de una sesión, en escala de 1 a 5
+function promedioAnimo(respuestas) {
+  const emojis = respuestas.filter(r => r.tipo === 'emoji' && r.valor !== '');
+  if (emojis.length === 0) return null;
+  const suma = emojis.reduce((t, r) => t + Number(r.valor), 0);
+  return suma / emojis.length;
+}
+
+// ============================================
+// PÁGINA: RESUMEN
+// ============================================
+function pintarResumen() {
+  const hoy = new Date().toDateString();
+  const sesHoy = SESIONES.filter(s => s.fecha.toDateString() === hoy);
+  const alertas = SESIONES.reduce((t, s) => t + s.alertas.length, 0);
+  const conAnimo = SESIONES.filter(s => s.promedio !== null);
+  const animo = conAnimo.length
+    ? (conAnimo.reduce((t, s) => t + s.promedio, 0) / conAnimo.length).toFixed(1)
+    : '—';
+  const activa = ENCUESTAS.find(e => e.activa);
+
+  document.getElementById('resumenSub').textContent =
+    activa ? 'Encuesta activa en la tablet: ' + activa.nombre
+           : 'No hay ninguna encuesta activa. La tablet no puede mostrar preguntas.';
+
+  document.getElementById('statCards').innerHTML = `
+    <div class="card"><div class="lbl">Sesiones totales</div><div class="val">${SESIONES.length}</div><div class="sub">Encuestas completadas</div></div>
+    <div class="card"><div class="lbl">Hoy</div><div class="val">${sesHoy.length}</div><div class="sub">Respuestas del día</div></div>
+    <div class="card"><div class="lbl">Ánimo promedio</div><div class="val">${animo}<span style="font-size:16px;color:var(--muted);"> / 5</span></div><div class="sub">${etiquetaAnimo(animo)}</div></div>
+    <div class="card ${alertas ? 'alert' : ''}"><div class="lbl">Alertas</div><div class="val">${alertas}</div><div class="sub">Respuestas críticas negativas</div></div>`;
+
+  pintarGraficaDias();
+  pintarGraficaPreguntas();
+  pintarAlertas();
+}
+
+function etiquetaAnimo(a) {
+  if (a === '—') return 'Sin datos todavía';
+  const n = Number(a);
+  if (n >= 4) return 'El equipo está bien';
+  if (n >= 3) return 'Estable, con puntos a revisar';
+  return 'Necesita atención';
+}
+
+function pintarGraficaDias() {
+  const porDia = {};
+  SESIONES.forEach(s => {
+    if (s.promedio === null) return;
+    const dia = s.fecha.toLocaleDateString('es-GT', { day: '2-digit', month: 'short' });
+    if (!porDia[dia]) porDia[dia] = [];
+    porDia[dia].push(s.promedio);
+  });
+  const dias = Object.keys(porDia).slice(-7);
+  const valores = dias.map(d => {
+    const arr = porDia[d];
+    return (arr.reduce((t, v) => t + v, 0) / arr.length).toFixed(2);
+  });
+
+  if (chartDias) chartDias.destroy();
+  chartDias = new Chart(document.getElementById('chartDias'), {
+    type: 'line',
+    data: { labels: dias, datasets: [{
+      data: valores, borderColor: BRAND.red, backgroundColor: 'rgba(215,43,43,.08)',
+      borderWidth: 2.5, tension: .35, fill: true, pointRadius: 4, pointBackgroundColor: BRAND.red
+    }]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { min: 1, max: 5, ticks: { stepSize: 1 } } }
+    }
+  });
+}
+
+function pintarGraficaPreguntas() {
+  const porPregunta = {};
+  RESPUESTAS.forEach(r => {
+    if (r.tipo !== 'emoji' && r.tipo !== 'scale') return;
+    if (r.valor === '' || r.valor === null) return;
+    const texto = String(r.pregunta_texto).slice(0, 34) + (String(r.pregunta_texto).length > 34 ? '…' : '');
+    if (!porPregunta[texto]) porPregunta[texto] = [];
+    // normaliza a 100 para poder comparar escalas de 1-5 con las de 1-10
+    const tope = r.tipo === 'emoji' ? 5 : 10;
+    porPregunta[texto].push(Number(r.valor) / tope * 100);
+  });
+
+  const etiquetas = Object.keys(porPregunta);
+  const valores = etiquetas.map(t => {
+    const arr = porPregunta[t];
+    return (arr.reduce((s, v) => s + v, 0) / arr.length).toFixed(1);
+  });
+
+  if (chartPreg) chartPreg.destroy();
+  chartPreg = new Chart(document.getElementById('chartPreg'), {
+    type: 'bar',
+    data: { labels: etiquetas, datasets: [{
+      data: valores,
+      backgroundColor: valores.map(v => v >= 70 ? BRAND.green : (v >= 45 ? BRAND.amber : BRAND.red)),
+      borderRadius: 6, barThickness: 22
+    }]},
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { min: 0, max: 100 }, y: { ticks: { font: { size: 11 } } } }
+    }
+  });
+}
+
+function pintarAlertas() {
+  const conAlerta = SESIONES.filter(s => s.alertas.length > 0).slice(0, 12);
+  const cont = document.getElementById('alertas');
+  if (conAlerta.length === 0) {
+    cont.innerHTML = `<div class="empty"><i class="fa-regular fa-circle-check"></i><p>Ninguna respuesta crítica por ahora.</p></div>`;
+    return;
+  }
+  let html = '<div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Trabajador</th><th>Pregunta</th><th>Respondió</th></tr></thead><tbody>';
+  conAlerta.forEach(s => {
+    s.alertas.forEach(a => {
+      html += `<tr>
+        <td>${fecha(s.fecha)}</td>
+        <td><strong>${escapar(s.trabajador)}</strong></td>
+        <td>${escapar(a.pregunta_texto)}</td>
+        <td><span class="badge bad">${escapar(String(a.valor))}</span></td>
+      </tr>`;
+    });
+  });
+  cont.innerHTML = html + '</tbody></table></div>';
+}
+
+// ============================================
+// PÁGINA: ENCUESTAS
+// ============================================
+function pintarEncuestas() {
+  const cont = document.getElementById('encList');
+  document.getElementById('btnNueva').disabled = ENCUESTAS.length >= MAX_ENCUESTAS;
+  document.getElementById('btnNueva').style.opacity = ENCUESTAS.length >= MAX_ENCUESTAS ? .45 : 1;
+
+  if (ENCUESTAS.length === 0) {
+    cont.innerHTML = `<div class="panel"><div class="empty"><i class="fa-regular fa-clipboard"></i><p>Todavía no hay encuestas. Creá la primera para que la tablet tenga preguntas que mostrar.</p></div></div>`;
+    return;
+  }
+
+  cont.innerHTML = ENCUESTAS.map(e => `
+    <div class="enc-item ${e.activa ? 'live' : ''}">
+      <div style="flex:1;min-width:220px;">
+        <h4>${escapar(e.nombre)}
+          ${e.activa ? '<span class="badge ok">En la tablet</span>' : '<span class="badge off">Inactiva</span>'}
+        </h4>
+        <p>${escapar(e.descripcion || 'Sin descripción')}</p>
+        <div class="enc-meta">${e.preguntas.length} pregunta${e.preguntas.length === 1 ? '' : 's'} ·
+          ${e.preguntas.filter(q => q.critica).length} crítica${e.preguntas.filter(q => q.critica).length === 1 ? '' : 's'} ·
+          ${contarSesionesDe(e.id)} respuesta${contarSesionesDe(e.id) === 1 ? '' : 's'}</div>
+      </div>
+      <div class="enc-acts">
+        ${e.activa ? '' : `<button class="btn btn-primary btn-sm" onclick="activar('${e.id}')"><i class="fa-solid fa-play"></i> Usar en la tablet</button>`}
+        <button class="btn btn-ghost btn-sm" onclick="editar('${e.id}')"><i class="fa-solid fa-pen"></i> Editar</button>
+        <button class="btn btn-ghost btn-sm" onclick="eliminar('${e.id}')"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>`).join('');
+}
+
+function contarSesionesDe(id) {
+  return SESIONES.filter(s => s.encuesta_id === id).length;
+}
+
+async function activar(id) {
+  try {
+    await apiPost('activarEncuesta', { id });
+    await recargar();
+  } catch (err) { alert('No se pudo activar: ' + err.message); }
+}
+
+async function eliminar(id) {
+  const e = ENCUESTAS.find(x => x.id === id);
+  if (!confirm('¿Eliminar "' + e.nombre + '"? Las respuestas que ya se registraron se conservan.')) return;
+  try {
+    await apiPost('eliminarEncuesta', { id });
+    await recargar();
+  } catch (err) { alert('No se pudo eliminar: ' + err.message); }
+}
+
+// ---------- Constructor ----------
+function abrirConstructor() {
+  borrador = { id: null, preguntas: [] };
+  document.getElementById('modalTitulo').textContent = 'Nueva encuesta';
+  document.getElementById('encNombre').value = '';
+  document.getElementById('encDesc').value = '';
+  document.getElementById('encMsg').className = 'msg';
+  agregarPregunta();
+  document.getElementById('modalEnc').classList.add('show');
+}
+
+function editar(id) {
+  const e = ENCUESTAS.find(x => x.id === id);
+  borrador = { id: e.id, preguntas: JSON.parse(JSON.stringify(e.preguntas)) };
+  document.getElementById('modalTitulo').textContent = 'Editar encuesta';
+  document.getElementById('encNombre').value = e.nombre;
+  document.getElementById('encDesc').value = e.descripcion || '';
+  document.getElementById('encMsg').className = 'msg';
+  pintarPreguntas();
+  document.getElementById('modalEnc').classList.add('show');
+}
+
+function cerrarConstructor() {
+  document.getElementById('modalEnc').classList.remove('show');
+}
+
+function agregarPregunta() {
+  if (borrador.preguntas.length >= MAX_PREGUNTAS) return;
+  borrador.preguntas.push({
+    id: 'q' + (borrador.preguntas.length + 1),
+    eyebrow: '', texto: '', tipo: 'emoji',
+    min: 'Nada', max: 'Mucho', opciones: [], critica: false
+  });
+  pintarPreguntas();
+}
+
+function quitarPregunta(i) {
+  borrador.preguntas.splice(i, 1);
+  borrador.preguntas.forEach((q, n) => q.id = 'q' + (n + 1));
+  pintarPreguntas();
+}
+
+function pintarPreguntas() {
+  const cont = document.getElementById('qList');
+  document.getElementById('qCount').textContent = '(' + borrador.preguntas.length + ' de ' + MAX_PREGUNTAS + ')';
+  const btn = document.getElementById('btnAddQ');
+  btn.disabled = borrador.preguntas.length >= MAX_PREGUNTAS;
+  btn.style.opacity = btn.disabled ? .45 : 1;
+
+  const opcionesTipo = Object.keys(TIPOS_PREGUNTA);
+
+  cont.innerHTML = borrador.preguntas.map((q, i) => `
+    <div class="q-row">
+      <div class="q-row-top">
+        <span class="q-num">${i + 1}</span>
+        <strong>${TIPOS_PREGUNTA[q.tipo].nombre}</strong>
+        <button class="icon-btn" onclick="quitarPregunta(${i})" title="Quitar"><i class="fa-solid fa-trash"></i></button>
+      </div>
+      <div class="q-grid">
+        <div class="field full">
+          <label>Pregunta</label>
+          <input type="text" value="${escapar(q.texto)}" placeholder="¿Cómo te sentís hoy?"
+                 oninput="cambiar(${i},'texto',this.value)">
+        </div>
+        <div class="field">
+          <label>Categoría (se muestra arriba de la pregunta)</label>
+          <input type="text" value="${escapar(q.eyebrow)}" placeholder="Estado emocional"
+                 oninput="cambiar(${i},'eyebrow',this.value)">
+        </div>
+        <div class="field">
+          <label>Tipo de respuesta</label>
+          <select onchange="cambiar(${i},'tipo',this.value)">
+            ${opcionesTipo.map(t => `<option value="${t}" ${q.tipo === t ? 'selected' : ''}>${TIPOS_PREGUNTA[t].nombre}</option>`).join('')}
+          </select>
+        </div>
+        ${q.tipo === 'scale' ? `
+          <div class="field"><label>Etiqueta del 1</label>
+            <input type="text" value="${escapar(q.min)}" oninput="cambiar(${i},'min',this.value)"></div>
+          <div class="field"><label>Etiqueta del 10</label>
+            <input type="text" value="${escapar(q.max)}" oninput="cambiar(${i},'max',this.value)"></div>` : ''}
+        ${q.tipo === 'multiple' ? `
+          <div class="field full"><label>Opciones (una por línea)</label>
+            <textarea rows="3" oninput="cambiarOpciones(${i},this.value)"
+              placeholder="Seguridad industrial&#10;Manejo de estrés">${escapar((q.opciones || []).join('\n'))}</textarea></div>` : ''}
+        <div class="field full">
+          <label class="chk"><input type="checkbox" ${q.critica ? 'checked' : ''}
+            onchange="cambiar(${i},'critica',this.checked)">
+            Pregunta crítica — si alguien responde negativo, aparece como alerta en el resumen</label>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function cambiar(i, campo, valor) {
+  borrador.preguntas[i][campo] = valor;
+  if (campo === 'tipo') pintarPreguntas(); // el formulario cambia según el tipo
+}
+
+function cambiarOpciones(i, texto) {
+  borrador.preguntas[i].opciones = texto.split('\n').map(s => s.trim()).filter(Boolean);
+}
+
+async function guardarEncuesta() {
+  const msg = document.getElementById('encMsg');
+  const nombre = document.getElementById('encNombre').value.trim();
+  const descripcion = document.getElementById('encDesc').value.trim();
+
+  if (!nombre) { aviso(msg, 'err', 'Ponele nombre a la encuesta.'); return; }
+  if (borrador.preguntas.length === 0) { aviso(msg, 'err', 'Agregá al menos una pregunta.'); return; }
+  const vacia = borrador.preguntas.findIndex(q => !q.texto.trim());
+  if (vacia >= 0) { aviso(msg, 'err', 'La pregunta ' + (vacia + 1) + ' está sin texto.'); return; }
+  const sinOpciones = borrador.preguntas.findIndex(q => q.tipo === 'multiple' && (!q.opciones || q.opciones.length < 2));
+  if (sinOpciones >= 0) { aviso(msg, 'err', 'La pregunta ' + (sinOpciones + 1) + ' necesita al menos dos opciones.'); return; }
+
+  aviso(msg, '', 'Guardando…');
+  try {
+    await apiPost('guardarEncuesta', {
+      id: borrador.id, nombre, descripcion, preguntas: borrador.preguntas
+    });
+    cerrarConstructor();
+    await recargar();
+  } catch (err) {
+    aviso(msg, 'err', 'No se pudo guardar: ' + err.message);
+  }
+}
+
+// ============================================
+// PÁGINA: RESPUESTAS
+// ============================================
+function llenarFiltroEncuestas() {
+  const sel = document.getElementById('fEncuesta');
+  sel.innerHTML = '<option value="">Todas las encuestas</option>' +
+    ENCUESTAS.map(e => `<option value="${e.id}">${escapar(e.nombre)}</option>`).join('');
+}
+
+function sesionesFiltradas() {
+  const enc = document.getElementById('fEncuesta').value;
+  const soloAlerta = document.getElementById('fAlerta').value;
+  const busca = document.getElementById('fBusca').value.toLowerCase().trim();
+  return SESIONES.filter(s => {
+    if (enc && s.encuesta_id !== enc) return false;
+    if (soloAlerta && s.alertas.length === 0) return false;
+    if (busca && !String(s.trabajador).toLowerCase().includes(busca)) return false;
+    return true;
+  });
+}
+
+function pintarRespuestas() {
+  const lista = sesionesFiltradas();
+  const cuerpo = document.querySelector('#tblResp tbody');
+  const vacio = document.getElementById('respVacio');
+
+  if (lista.length === 0) {
+    cuerpo.innerHTML = '';
+    vacio.innerHTML = `<div class="empty"><i class="fa-regular fa-folder-open"></i><p>No hay respuestas que coincidan.</p></div>`;
+    return;
+  }
+  vacio.innerHTML = '';
+  cuerpo.innerHTML = lista.map(s => `
+    <tr>
+      <td>${fecha(s.fecha)}</td>
+      <td><strong>${escapar(s.trabajador)}</strong></td>
+      <td>${escapar(s.encuesta_nombre || '—')}</td>
+      <td>${s.promedio !== null ? s.promedio.toFixed(1) + ' / 5' : '—'}</td>
+      <td>${s.alertas.length
+        ? `<span class="badge bad">${s.alertas.length} alerta${s.alertas.length === 1 ? '' : 's'}</span>`
+        : '<span class="badge ok">Sin alertas</span>'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="verDetalle('${s.sesion_id}')">Ver</button></td>
+    </tr>`).join('');
+}
+
+function verDetalle(id) {
+  const s = SESIONES.find(x => x.sesion_id === id);
+  document.getElementById('detBody').innerHTML = `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+      ${escapar(s.trabajador)} · ${fecha(s.fecha)} · ${escapar(s.encuesta_nombre || '')}
+    </p>` + s.respuestas.map(r => `
+      <div style="padding:12px 0;border-bottom:1px solid #F0EEE9;">
+        <div style="font-size:12.5px;color:var(--muted);margin-bottom:4px;">${escapar(r.pregunta_texto)}</div>
+        <div style="font-size:15px;font-weight:700;">
+          ${escapar(String(r.valor) || '(sin respuesta)')}
+          ${esAlerta(r) ? '<span class="badge bad" style="margin-left:8px;">Alerta</span>' : ''}
+        </div>
+      </div>`).join('');
+  document.getElementById('modalDet').classList.add('show');
+}
+
+function cerrarDetalle() {
+  document.getElementById('modalDet').classList.remove('show');
+}
+
+function exportarCSV() {
+  const ids = sesionesFiltradas().map(s => s.sesion_id);
+  const filas = RESPUESTAS.filter(r => ids.includes(r.sesion_id));
+  if (filas.length === 0) { alert('No hay datos para exportar con los filtros actuales.'); return; }
+
+  const cols = ['timestamp', 'encuesta_nombre', 'sesion_id', 'numTrabajador', 'pregunta_texto', 'tipo', 'valor', 'critica'];
+  let csv = cols.join(',') + '\n';
+  filas.forEach(r => {
+    csv += cols.map(c => '"' + String(r[c] === undefined ? '' : r[c]).replace(/"/g, '""') + '"').join(',') + '\n';
+  });
+
+  const url = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'bienestar_respuestas_' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================
+// PÁGINA: USUARIOS
+// ============================================
+function pintarUsuarios() {
+  document.querySelector('#tblUsers tbody').innerHTML = USUARIOS.map(u => `
+    <tr>
+      <td><strong>${escapar(u.usuario)}</strong></td>
+      <td>${u.rol === 'admin' ? '<span class="badge warn">Administrador</span>' : 'Trabajador'}</td>
+      <td>${u.activo ? '<span class="badge ok">Activo</span>' : '<span class="badge off">Inactivo</span>'}</td>
+      <td>${u.rol === 'admin' ? '' :
+        `<button class="btn btn-ghost btn-sm" onclick="borrarUsuario('${escapar(u.usuario)}')"><i class="fa-solid fa-trash"></i></button>`}</td>
+    </tr>`).join('');
+}
+
+async function crearUsuario() {
+  const msg = document.getElementById('userMsg');
+  const usuario = document.getElementById('nuUser').value.trim();
+  const password = document.getElementById('nuPass').value.trim();
+  if (!usuario) { aviso(msg, 'err', 'Escribí el nombre de usuario.'); return; }
+  try {
+    await apiPost('guardarUsuario', { usuario, password, rol: 'trabajador' });
+    document.getElementById('nuUser').value = '';
+    aviso(msg, 'ok', 'Usuario agregado. Ya puede entrar en la tablet.');
+    await recargar();
+  } catch (err) { aviso(msg, 'err', err.message); }
+}
+
+async function borrarUsuario(usuario) {
+  if (!confirm('¿Eliminar a ' + usuario + '?')) return;
+  try {
+    await apiPost('eliminarUsuario', { usuario });
+    await recargar();
+  } catch (err) { alert(err.message); }
+}
+
+// ============================================
+// UTILIDADES
+// ============================================
+function fecha(d) {
+  return d.toLocaleString('es-GT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function escapar(t) {
+  return String(t === undefined || t === null ? '' : t)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+</script>
+</body>
+</html>

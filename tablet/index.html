@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nestlé — Bienestar Laboral</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;600;700;800&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --red:#D72B2B;--dark:#111;--mid:#444;--muted:#888;--soft:#F5F3EF;
+  --white:#FFF;--border:#E4E1DB;--green:#2A9B5B;--amber:#E07B0D;
+  --radius:12px;--tr:.3s ease;
+}
+html,body{height:100%;font-family:'Noto Sans',sans-serif;background:var(--soft);color:var(--dark);}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;background:var(--red);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:400;transition:opacity .8s ease,transform .8s ease;}
+#splash.hide{opacity:0;transform:scale(1.04);pointer-events:none;}
+#splash img{width:200px;filter:brightness(0) invert(1);margin-bottom:36px;}
+.splash-track{width:200px;height:3px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;}
+.splash-fill{height:100%;width:0%;background:#fff;border-radius:99px;animation:loadbar 2.4s cubic-bezier(.4,0,.2,1) forwards;}
+@keyframes loadbar{to{width:100%;}}
+.splash-label{margin-top:12px;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.6);}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:var(--soft);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:150;padding:24px;}
+#login-screen.show{display:flex;}
+.login-card{background:var(--white);border-radius:20px;padding:36px 32px;max-width:420px;width:100%;box-shadow:0 4px 32px rgba(0,0,0,.08);text-align:center;}
+.login-card img{height:32px;margin-bottom:20px;}
+.login-card h1{font-size:22px;font-weight:800;margin-bottom:6px;}
+.login-card>p{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.field{margin-bottom:15px;text-align:left;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--mid);margin-bottom:5px;}
+.field input{width:100%;padding:12px 15px;border:1.5px solid #E0DDD7;border-radius:10px;font-family:inherit;font-size:15px;outline:none;transition:border-color var(--tr);background:var(--soft);color:var(--dark);}
+.field input:focus{border-color:var(--red);background:#fff;}
+.btn-primary{width:100%;padding:13px;background:var(--red);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:background var(--tr);}
+.btn-primary:hover{background:#b82020;}
+.error-msg{color:var(--red);font-size:12px;margin-top:10px;display:none;}
+.error-msg.show{display:block;}
+
+/* ENCUESTA */
+#encuesta-app{display:none;flex-direction:column;min-height:100vh;}
+#encuesta-app.show{display:flex;}
+.enc-header{background:var(--white);border-bottom:1px solid var(--border);padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.enc-header img{height:28px;}
+.enc-header span{font-size:13px;font-weight:600;color:var(--muted);}
+.enc-main{flex:1;overflow-y:auto;padding:28px 20px;display:flex;align-items:flex-start;justify-content:center;}
+.screen{display:none;width:100%;max-width:580px;animation:fadeUp .4s ease;}
+.screen.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.survey-progress{display:flex;align-items:center;gap:12px;margin-bottom:22px;}
+.prog-track{flex:1;height:4px;background:#E0DDD7;border-radius:99px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--red);border-radius:99px;transition:width .5s ease;}
+.prog-label{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;}
+.question-card{background:var(--white);border-radius:var(--radius);padding:28px 24px;box-shadow:0 2px 16px rgba(0,0,0,.06);margin-bottom:14px;}
+.q-eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--red);margin-bottom:7px;}
+.q-text{font-size:17px;font-weight:700;line-height:1.4;margin-bottom:24px;}
+.emoji-grid{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;}
+.emoji-btn{display:flex;flex-direction:column;align-items:center;gap:7px;padding:14px 11px;min-width:78px;border:2px solid #E0DDD7;border-radius:14px;background:var(--soft);cursor:pointer;transition:all var(--tr);font-family:inherit;}
+.emoji-btn i{font-size:26px;transition:transform .2s;}
+.emoji-btn span{font-size:11px;font-weight:600;color:var(--muted);}
+.emoji-btn:hover{border-color:var(--red);background:#fff;}
+.emoji-btn:hover i{transform:scale(1.15);}
+.emoji-btn.selected{border-color:var(--red);background:#FFF0F0;}
+.emoji-btn.selected span{color:var(--red);}
+.scale-bar{display:flex;gap:5px;}
+.scale-btn{flex:1;aspect-ratio:1;border:2px solid #E0DDD7;border-radius:8px;background:var(--soft);font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:all var(--tr);font-family:inherit;}
+.scale-btn:hover{border-color:var(--red);color:var(--dark);background:#fff;}
+.scale-btn.selected{background:var(--red);border-color:var(--red);color:#fff;}
+.scale-labels{display:flex;justify-content:space-between;margin-top:6px;}
+.scale-labels span{font-size:11px;color:var(--muted);}
+.open-textarea{width:100%;padding:13px 15px;border:1.5px solid #E0DDD7;border-radius:10px;resize:none;font-family:inherit;font-size:15px;background:var(--soft);color:var(--dark);outline:none;transition:border-color var(--tr);line-height:1.6;}
+.open-textarea:focus{border-color:var(--red);background:#fff;}
+.nav-row{display:flex;gap:10px;justify-content:flex-end;}
+.btn-secondary{padding:10px 20px;border:1.5px solid #E0DDD7;border-radius:10px;background:transparent;font-family:inherit;font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;transition:all var(--tr);}
+.btn-secondary:hover{border-color:var(--mid);}
+.btn-next{padding:10px 22px;background:var(--red);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:background var(--tr);display:flex;align-items:center;gap:7px;}
+.btn-next:hover{background:#b82020;}
+.btn-next:disabled{background:#E0DDD7;cursor:default;}
+.thanks-card{background:var(--white);border-radius:var(--radius);padding:50px 32px;text-align:center;box-shadow:0 2px 16px rgba(0,0,0,.06);}
+.thanks-icon{width:68px;height:68px;background:#FFF0F0;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+.thanks-icon i{font-size:30px;color:var(--red);}
+.thanks-card h2{font-size:22px;font-weight:700;margin-bottom:10px;}
+.thanks-card p{font-size:14px;color:var(--muted);line-height:1.7;max-width:300px;margin:0 auto 24px;}
+.thanks-countdown{font-size:12px;color:var(--muted);margin-top:10px;}
+.enc-footer{height:40px;background:var(--white);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);letter-spacing:.06em;flex-shrink:0;}
+
+.sending-overlay{position:fixed;inset:0;background:rgba(255,255,255,.9);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:500;}
+.sending-overlay.show{display:flex;}
+.sending-overlay i{font-size:40px;color:var(--red);animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.sending-overlay p{margin-top:16px;font-size:14px;font-weight:600;color:var(--mid);}
+
+@media(max-width:600px){
+  .emoji-btn{min-width:64px;padding:12px 7px;}
+  .emoji-btn i{font-size:22px;}
+  .scale-btn{font-size:11px;}
+  .login-card{padding:28px 20px;}
+}
+
+/* --- TIPOS DE RESPUESTA AGREGADOS --- */
+.opt-list{display:flex;flex-direction:column;gap:10px;}
+.opt-btn{display:flex;align-items:center;gap:12px;width:100%;padding:15px 18px;background:var(--soft);border:2px solid #E0DDD7;border-radius:12px;font-family:inherit;font-size:15px;font-weight:600;color:var(--dark);text-align:left;cursor:pointer;transition:all var(--tr);}
+.opt-btn:hover{border-color:var(--red);background:#fff;}
+.opt-btn.selected{border-color:var(--red);background:#fff;box-shadow:0 2px 12px rgba(215,43,43,.12);}
+.opt-btn i{font-size:19px;color:var(--muted);flex-shrink:0;}
+.opt-btn.selected i{color:var(--red);}
+.yn-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.yn-btn{padding:22px 14px;background:var(--soft);border:2px solid #E0DDD7;border-radius:14px;font-family:inherit;font-size:16px;font-weight:700;color:var(--dark);cursor:pointer;transition:all var(--tr);display:flex;flex-direction:column;align-items:center;gap:9px;}
+.yn-btn i{font-size:26px;color:var(--muted);}
+.yn-btn:hover{border-color:var(--red);background:#fff;}
+.yn-btn.selected{border-color:var(--red);background:#fff;}
+.yn-btn.selected i{color:var(--red);}
+.estado-carga{text-align:center;padding:50px 20px;color:var(--muted);}
+.estado-carga i{font-size:30px;margin-bottom:14px;display:block;color:var(--border);}
+.estado-carga p{font-size:14px;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <img src="https://upload.wikimedia.org/wikipedia/sco/thumb/d/d8/Nestl%C3%A9.svg/3840px-Nestl%C3%A9.svg.png" alt="Nestlé">
+  <div class="splash-track"><div class="splash-fill"></div></div>
+  <p class="splash-label">Sistema de Bienestar Laboral</p>
+</div>
+
+<!-- LOGIN TRABAJADOR -->
+<div id="login-screen">
+  <div class="login-card">
+    <img src="https://upload.wikimedia.org/wikipedia/sco/thumb/d/d8/Nestl%C3%A9.svg/3840px-Nestl%C3%A9.svg.png" alt="Nestlé">
+    <h1>Bienestar Laboral</h1>
+    <p>Ingresa tu número de trabajador para comenzar.</p>
+    <div class="field">
+      <label>Número de trabajador</label>
+      <input type="text" id="workerNum" placeholder="Ej. trabajador1" maxlength="15">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="workerPass" placeholder="••••••••">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Ingresar</button>
+    <p class="error-msg" id="loginError">Usuario o contraseña incorrectos.</p>
+  </div>
+</div>
+
+<!-- ENCUESTA -->
+<div id="encuesta-app">
+  <div class="enc-header">
+    <img src="https://upload.wikimedia.org/wikipedia/sco/thumb/d/d8/Nestl%C3%A9.svg/3840px-Nestl%C3%A9.svg.png" alt="Nestlé">
+    <span id="workerNameDisplay">Trabajador</span>
+  </div>
+  <div class="enc-main">
+    <div class="screen active" id="screen-survey">
+      <div class="survey-progress">
+        <div class="prog-track"><div class="prog-fill" id="progressFill" style="width:0%"></div></div>
+        <span class="prog-label" id="progressLabel">1 / 5</span>
+      </div>
+      <div id="questionContainer"></div>
+      <div class="nav-row">
+        <button class="btn-secondary" id="btnBack" onclick="prevQuestion()" style="display:none"><i class="fa-solid fa-arrow-left"></i> Atrás</button>
+        <button class="btn-next" id="btnNext" onclick="nextQuestion()" disabled>Siguiente <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+    <div class="screen" id="screen-thanks">
+      <div class="thanks-card">
+        <div class="thanks-icon"><i class="fa-solid fa-heart"></i></div>
+        <h2>¡Gracias!</h2>
+        <p>Tu respuesta ha sido registrada. Tu bienestar es importante para el equipo Nestlé.</p>
+        <button class="btn-primary" style="max-width:200px;margin:0 auto;" onclick="resetEnc()">Nueva sesión</button>
+        <p class="thanks-countdown" id="countdownLabel"></p>
+      </div>
+    </div>
+  </div>
+  <div class="enc-footer">NESTLÉ · SISTEMA DE BIENESTAR LABORAL · CONFIDENCIAL</div>
+</div>
+
+<!-- SENDING OVERLAY -->
+<div class="sending-overlay" id="sendingOverlay">
+  <i class="fa-solid fa-circle-notch"></i>
+  <p>Enviando respuesta...</p>
+</div>
+
+<script src="../shared/config.js"></script>
+<script>
+// ============================================
+// TABLET — la encuesta ya no está escrita aquí.
+// Se pide al Apps Script cada vez que alguien entra.
+// ============================================
+let ENCUESTA = null;      // encuesta activa {id, nombre, preguntas[]}
+let currentQ = 0;
+let answers = {};
+let currentUser = '';
+
+function showScreen(id) {
+  document.getElementById('splash').classList.remove('show');
+  document.getElementById('login-screen').classList.remove('show');
+  document.getElementById('encuesta-app').style.display = 'none';
+  document.getElementById('encuesta-app').classList.remove('show');
+
+  if (id === 'splash') {
+    document.getElementById('splash').style.display = 'flex';
+  } else if (id === 'login') {
+    document.getElementById('login-screen').classList.add('show');
+  } else if (id === 'encuesta') {
+    document.getElementById('encuesta-app').style.display = 'flex';
+    document.getElementById('encuesta-app').classList.add('show');
+  }
+}
+
+// ============================================
+// LOGIN — lo valida el Apps Script contra la hoja Usuarios
+// ============================================
+async function doLogin() {
+  const num = document.getElementById('workerNum').value.trim();
+  const pass = document.getElementById('workerPass').value.trim();
+  const errorEl = document.getElementById('loginError');
+
+  if (!num || !pass) {
+    errorEl.textContent = 'Ingresá tu usuario y contraseña.';
+    errorEl.classList.add('show');
+    return;
+  }
+
+  errorEl.classList.remove('show');
+  document.getElementById('sendingOverlay').classList.add('show');
+
+  try {
+    await apiPost('login', { usuario: num, password: pass });
+    ENCUESTA = await apiGet('encuestaActiva');
+    document.getElementById('sendingOverlay').classList.remove('show');
+
+    if (!ENCUESTA || !ENCUESTA.preguntas.length) {
+      mostrarSinEncuesta();
+      return;
+    }
+
+    currentUser = num;
+    currentQ = 0;
+    answers = {};
+    document.getElementById('workerNameDisplay').textContent = num;
+    showScreen('encuesta');
+    renderQuestion();
+  } catch (err) {
+    document.getElementById('sendingOverlay').classList.remove('show');
+    errorEl.textContent = err.message;
+    errorEl.classList.add('show');
+  }
+}
+
+function mostrarSinEncuesta() {
+  showScreen('encuesta');
+  document.getElementById('questionContainer').innerHTML =
+    '<div class="estado-carga"><i class="fa-regular fa-clipboard"></i>' +
+    '<p>Todavía no hay una encuesta activa.<br>Recursos Humanos debe activar una desde el panel.</p></div>';
+  document.getElementById('btnNext').style.display = 'none';
+  document.getElementById('btnBack').style.display = 'none';
+}
+
+// ============================================
+// PINTAR LA PREGUNTA SEGÚN SU TIPO
+// ============================================
+function renderQuestion() {
+  const q = ENCUESTA.preguntas[currentQ];
+  const total = ENCUESTA.preguntas.length;
+
+  document.getElementById('progressFill').style.width = ((currentQ + 1) / total * 100) + '%';
+  document.getElementById('progressLabel').textContent = (currentQ + 1) + ' / ' + total;
+  document.getElementById('btnBack').style.display = currentQ > 0 ? 'block' : 'none';
+  document.getElementById('btnNext').innerHTML = currentQ === total - 1
+    ? 'Enviar <i class="fa-solid fa-check"></i>'
+    : 'Siguiente <i class="fa-solid fa-arrow-right"></i>';
+  document.getElementById('btnNext').disabled = (answers[q.id] === undefined && q.tipo !== 'open');
+
+  let html = '<div class="question-card">';
+  if (q.eyebrow) html += '<p class="q-eyebrow">' + q.eyebrow + '</p>';
+  html += '<p class="q-text">' + q.texto + '</p>';
+
+  if (q.tipo === 'emoji') {
+    const caras = [
+      { icon: 'fa-regular fa-face-grin-stars', label: 'Excelente', value: 5 },
+      { icon: 'fa-regular fa-face-smile',      label: 'Bien',      value: 4 },
+      { icon: 'fa-regular fa-face-meh',        label: 'Regular',   value: 3 },
+      { icon: 'fa-regular fa-face-frown',      label: 'Mal',       value: 2 },
+      { icon: 'fa-regular fa-face-tired',      label: 'Agotado',   value: 1 }
+    ];
+    html += '<div class="emoji-grid">';
+    caras.forEach(c => {
+      const sel = answers[q.id] === c.value ? ' selected' : '';
+      html += '<button class="emoji-btn' + sel + '" onclick="responder(\'' + q.id + '\',' + c.value + ',this,\'.emoji-btn\')">' +
+              '<i class="' + c.icon + '"></i><span>' + c.label + '</span></button>';
+    });
+    html += '</div>';
+  }
+
+  if (q.tipo === 'scale') {
+    html += '<div class="scale-bar">';
+    for (let i = 1; i <= 10; i++) {
+      const sel = answers[q.id] === i ? ' selected' : '';
+      html += '<button class="scale-btn' + sel + '" onclick="responder(\'' + q.id + '\',' + i + ',this,\'.scale-btn\')">' + i + '</button>';
+    }
+    html += '</div><div class="scale-labels"><span>' + (q.min || '') + '</span><span>' + (q.max || '') + '</span></div>';
+  }
+
+  if (q.tipo === 'si_no') {
+    html += '<div class="yn-grid">';
+    [['Sí', 'fa-solid fa-thumbs-up'], ['No', 'fa-solid fa-thumbs-down']].forEach(o => {
+      const sel = answers[q.id] === o[0] ? ' selected' : '';
+      html += '<button class="yn-btn' + sel + '" onclick="responder(\'' + q.id + '\',\'' + o[0] + '\',this,\'.yn-btn\')">' +
+              '<i class="' + o[1] + '"></i>' + o[0] + '</button>';
+    });
+    html += '</div>';
+  }
+
+  if (q.tipo === 'multiple') {
+    html += '<div class="opt-list">';
+    (q.opciones || []).forEach(op => {
+      const sel = answers[q.id] === op ? ' selected' : '';
+      const texto = String(op).replace(/'/g, "\\'");
+      html += '<button class="opt-btn' + sel + '" onclick="responder(\'' + q.id + '\',\'' + texto + '\',this,\'.opt-btn\')">' +
+              '<i class="fa-regular fa-circle"></i>' + op + '</button>';
+    });
+    html += '</div>';
+  }
+
+  if (q.tipo === 'open') {
+    const val = answers[q.id] || '';
+    html += '<textarea class="open-textarea" rows="4" placeholder="Escribí aquí tu comentario..." ' +
+            'oninput="answers[\'' + q.id + '\']=this.value"></textarea>';
+  }
+
+  html += '</div>';
+  document.getElementById('questionContainer').innerHTML = html;
+
+  if (q.tipo === 'open') {
+    document.querySelector('.open-textarea').value = answers[q.id] || '';
+    document.getElementById('btnNext').disabled = false;
+  }
+}
+
+// Una sola función para todos los tipos de botón
+function responder(qId, valor, el, selector) {
+  answers[qId] = valor;
+  el.parentElement.querySelectorAll(selector).forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('btnNext').disabled = false;
+}
+
+function nextQuestion() {
+  if (currentQ < ENCUESTA.preguntas.length - 1) {
+    currentQ++;
+    renderQuestion();
+  } else {
+    submitSurvey();
+  }
+}
+
+function prevQuestion() {
+  if (currentQ > 0) { currentQ--; renderQuestion(); }
+}
+
+// ============================================
+// ENVÍO — arma una fila por respuesta
+// ============================================
+async function submitSurvey() {
+  document.getElementById('sendingOverlay').classList.add('show');
+
+  const lista = ENCUESTA.preguntas.map(q => ({
+    pregunta_id: q.id,
+    pregunta_texto: q.texto,
+    tipo: q.tipo,
+    valor: answers[q.id] !== undefined ? answers[q.id] : '',
+    critica: q.critica === true
+  }));
+
+  try {
+    await apiPost('guardarRespuestas', {
+      encuesta_id: ENCUESTA.id,
+      encuesta_nombre: ENCUESTA.nombre,
+      numTrabajador: currentUser,
+      respuestas: lista
+    });
+    document.getElementById('sendingOverlay').classList.remove('show');
+    showThanks();
+  } catch (err) {
+    document.getElementById('sendingOverlay').classList.remove('show');
+    alert('No se pudo enviar: ' + err.message + '\nIntentá de nuevo.');
+  }
+}
+
+function showThanks() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-thanks').classList.add('active');
+  let s = 15;
+  const etiqueta = document.getElementById('countdownLabel');
+  etiqueta.textContent = 'Regresando al inicio en ' + s + 's...';
+  const iv = setInterval(() => {
+    s--;
+    etiqueta.textContent = 'Regresando al inicio en ' + s + 's...';
+    if (s <= 0) { clearInterval(iv); resetEnc(); }
+  }, 1000);
+}
+
+function resetEnc() {
+  document.getElementById('workerNum').value = '';
+  document.getElementById('workerPass').value = '';
+  currentUser = '';
+  currentQ = 0;
+  answers = {};
+  document.getElementById('btnNext').style.display = '';
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-survey').classList.add('active');
+  showScreen('login');
+}
+
+// ============================================
+// INICIO
+// ============================================
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('workerPass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('hide');
+    setTimeout(() => {
+      document.getElementById('splash').style.display = 'none';
+      showScreen('login');
+    }, 800);
+  }, 2600);
+});
+</script>
+</body>
+</html>
